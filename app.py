@@ -84,7 +84,9 @@ if img_file_buffer is not None:
     
     # Process Image
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_classifier.detectMultiScale(gray, 1.3, 5)
+    # 1.1 = Scan more detailed (slower but catches more faces)
+    # 4 = Less strict about what counts as a face
+    faces = face_classifier.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4)
 
     if len(faces) > 0:
         for (x, y, w, h) in faces:
@@ -118,4 +120,5 @@ if img_file_buffer is not None:
             st.image(frame, channels="BGR")
             break
     else:
+
         st.warning("No face detected! Try moving closer.")
