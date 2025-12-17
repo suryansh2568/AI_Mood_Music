@@ -4,20 +4,23 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyClientCredentials # UPDATED IMPORT
 import random
 
-# 1) Set Up
+# =========================================================================
+# 1. SETUP & CONFIGURATION
+# =========================================================================
 CLIENT_ID = '5bc83e9abb1842b690f94c11d3eef335'
 CLIENT_SECRET = '2a5ad0dfbe044cba93fb6a1cabf58853'
-REDIRECT_URI = 'http://127.0.0.1:5000/callback'
 
 # Page Config
 st.set_page_config(page_title="Mood Music Player", page_icon="🎵")
 st.title("🎵 Mood Music Player")
 st.write("Take a selfie, and I'll play the perfect song for your mood.")
 
-# 2) Load Models
+# =========================================================================
+# 2. LOAD MODELS (Cached for Speed)
+# =========================================================================
 @st.cache_resource
 def load_models():
     # Load Emotion Model
@@ -30,19 +33,21 @@ try:
     emotion_classifier, face_classifier = load_models()
     emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
     st.success("✅ AI System Ready")
-except:
-    st.error("❌ Error: Could not load 'emotion_model.hdf5'. Check your folder.")
+except Exception as e:
+    st.error(f"❌ Error loading models: {e}. Check if 'emotion_model.hdf5' is uploaded.")
 
-# Spotify Setup
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
-    client_id=CLIENT_ID,
-    client_secret=CLIENT_SECRET,
-    redirect_uri=REDIRECT_URI,
-    scope="user-library-read"
-))
+# =========================================================================
+# 3. SPOTIFY SETUP (NO LOGIN REQUIRED)
+# =========================================================================
+# This method prevents the "[Errno 98] Address already in use" error
+auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
+sp = spotipy.Spotify(auth_manager=auth_manager)
 
-# 3) Music Logic
+# =========================================================================
+# 4. MUSIC LOGIC (INTERNATIONAL)
+# =========================================================================
 def get_music_link(mood):
+    # Standard International Genres
     search_query = ""
     if mood == 'Happy':
         search_query = "Happy Upbeat Pop"
@@ -58,9 +63,8 @@ def get_music_link(mood):
         search_query = "Top Hits"
 
     try:
-        # Randomized Search to avoid same songs
+        # Randomized Search to keep it fresh
         random_offset = random.randint(0, 10)
-        # We keep market='IN' just to ensure songs are playable in India
         results = sp.search(q=search_query, limit=10, offset=random_offset, type='track', market='IN')
         
         if results and results['tracks']['items']:
@@ -74,7 +78,9 @@ def get_music_link(mood):
     
     return None, None, None
 
-# 4) App Interface
+# =========================================================================
+# 5. APP INTERFACE (CAMERA)
+# =========================================================================
 img_file_buffer = st.camera_input("Take a Picture")
 
 if img_file_buffer is not None:
@@ -84,8 +90,14 @@ if img_file_buffer is not None:
     
     # Process Image
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # 1.1 = Scan more detailed (slower but catches more faces)
-    # 4 = Less strict about what counts as a face
+    
+    # DEBUG: Show what the AI sees (Helps check lighting)
+    with st.expander("See what the AI sees (Debug)"):
+        st.image(gray, caption="Grayscale Input")
+
+    # Detect Faces (Adjusted for better sensitivity)
+    # scaleFactor 1.1 = Scan slower but find more faces
+    # minNeighbors 4 = Slightly less strict
     faces = face_classifier.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4)
 
     if len(faces) > 0:
@@ -110,15 +122,13 @@ if img_file_buffer is not None:
             if track:
                 st.subheader(f"🎶 Recommended: {track}")
                 st.write(f"by {artist}")
-                # Clickable Button
                 st.link_button("▶️ Play on Spotify", link)
             else:
                 st.write("Could not find a song.")
             
             # Draw box on face
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-            st.image(frame, channels="BGR")
+            st.image(frame, channels="BGR", caption="Analyzed Face")
             break
     else:
-
-        st.warning("No face detected! Try moving closer.")
+        st.warning("No face detected! Try moving closer to the camera or turning on a light.")
