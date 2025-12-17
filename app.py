@@ -7,9 +7,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials # UPDATED IMPORT
 import random
 
-# =========================================================================
-# 1. SETUP & CONFIGURATION
-# =========================================================================
+# 1. SETUP 
 CLIENT_ID = '5bc83e9abb1842b690f94c11d3eef335'
 CLIENT_SECRET = '2a5ad0dfbe044cba93fb6a1cabf58853'
 
@@ -18,9 +16,7 @@ st.set_page_config(page_title="Mood Music Player", page_icon="🎵")
 st.title("🎵 Mood Music Player")
 st.write("Take a selfie, and I'll play the perfect song for your mood.")
 
-# =========================================================================
-# 2. LOAD MODELS (Cached for Speed)
-# =========================================================================
+# 2. LOAD MODELS
 @st.cache_resource
 def load_models():
     # Load Emotion Model
@@ -36,18 +32,14 @@ try:
 except Exception as e:
     st.error(f"❌ Error loading models: {e}. Check if 'emotion_model.hdf5' is uploaded.")
 
-# =========================================================================
+
 # 3. SPOTIFY SETUP (NO LOGIN REQUIRED)
-# =========================================================================
-# This method prevents the "[Errno 98] Address already in use" error
 auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
 sp = spotipy.Spotify(auth_manager=auth_manager)
 
-# =========================================================================
-# 4. MUSIC LOGIC (INTERNATIONAL)
-# =========================================================================
+
+# 4. MUSIC LOGIC 
 def get_music_link(mood):
-    # Standard International Genres
     search_query = ""
     if mood == 'Happy':
         search_query = "Happy Upbeat Pop"
@@ -63,7 +55,7 @@ def get_music_link(mood):
         search_query = "Top Hits"
 
     try:
-        # Randomized Search to keep it fresh
+        # Randomized Search
         random_offset = random.randint(0, 10)
         results = sp.search(q=search_query, limit=10, offset=random_offset, type='track', market='IN')
         
@@ -78,9 +70,8 @@ def get_music_link(mood):
     
     return None, None, None
 
-# =========================================================================
-# 5. APP INTERFACE (CAMERA)
-# =========================================================================
+
+# 5. APP INTERFACE
 img_file_buffer = st.camera_input("Take a Picture")
 
 if img_file_buffer is not None:
@@ -95,7 +86,7 @@ if img_file_buffer is not None:
     with st.expander("See what the AI sees (Debug)"):
         st.image(gray, caption="Grayscale Input")
 
-    # Detect Faces (Adjusted for better sensitivity)
+    # Detect Faces
     # scaleFactor 1.1 = Scan slower but find more faces
     # minNeighbors 4 = Slightly less strict
     faces = face_classifier.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4)
@@ -132,3 +123,4 @@ if img_file_buffer is not None:
             break
     else:
         st.warning("No face detected! Try moving closer to the camera or turning on a light.")
+
