@@ -2,7 +2,12 @@
 
 A smart AI-powered web application that detects your current emotion from your facial expression and recommends the perfect Spotify song to match your mood.
 
-Built with **Python**, **Streamlit**, **Computer Vision**, and the **Spotify API**.
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=Streamlit&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
+![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)
+![Spotify](https://img.shields.io/badge/Spotify-1ED760?style=for-the-badge&logo=spotify&logoColor=white)
+
+---
 
 ## Features
 
